@@ -1,0 +1,156 @@
+{
+    "level": "N4",
+    "source": "Minna no Nihongo Shokyu II",
+    "lessons": [
+        {
+            "lessonNumber": 26,
+            "title": "Explaining Situations (~n desu)",
+            "grammar": [
+                {
+                    "rule": "～んです",
+                    "explanation": "Used for providing an explanation, asking for clarification, or emphasizing a reason.",
+                    "examples": [
+                        {
+                            "jp": "どうしたんですか。",
+                            "en": "What's the matter? (Explaining tone)"
+                        },
+                        {
+                            "jp": "頭が痛いんです。",
+                            "en": "It's that I have a headache."
+                        }
+                    ]
+                }
+            ],
+            "vocabulary": [
+                {
+                    "kanji": "診ます",
+                    "reading": "みます",
+                    "english": "check, examine"
+                },
+                {
+                    "kanji": "探します",
+                    "reading": "さがします",
+                    "english": "look for, search"
+                },
+                {
+                    "kanji": "遅れます",
+                    "reading": "おくれます",
+                    "english": "be late"
+                },
+                {
+                    "kanji": "間に合います",
+                    "reading": "まにあいます",
+                    "english": "be in time"
+                }
+            ]
+        },
+        {
+            "lessonNumber": 27,
+            "title": "Potential Form (Can do)",
+            "grammar": [
+                {
+                    "rule": "可能形 (Potential Form)",
+                    "explanation": "Indicates the ability to perform an action.",
+                    "examples": [
+                        {
+                            "jp": "日本語が話せます。",
+                            "en": "I can speak Japanese."
+                        },
+                        {
+                            "jp": "一人で行けますか。",
+                            "en": "Can you go alone?"
+                        }
+                    ]
+                }
+            ],
+            "vocabulary": [
+                {
+                    "kanji": "飼います",
+                    "reading": "かいます",
+                    "english": "keep (a pet)"
+                },
+                {
+                    "kanji": "建てます",
+                    "reading": "たてます",
+                    "english": "build"
+                },
+                {
+                    "kanji": "走ります",
+                    "reading": "はしります",
+                    "english": "run, drive"
+                },
+                {
+                    "kanji": "見えます",
+                    "reading": "みえます",
+                    "english": "be visible"
+                }
+            ]
+        },
+        {
+            "lessonNumber": 30,
+            "title": "Preparation & States (~te arimasu)",
+            "grammar": [
+                {
+                    "rule": "～てあります",
+                    "explanation": "Indicates a state that remains as a result of an intentional action.",
+                    "examples": [
+                        {
+                            "jp": "カレンダーに予定が書いてあります。",
+                            "en": "The schedule is written on the calendar."
+                        }
+                    ]
+                }
+            ],
+            "vocabulary": [
+                {
+                    "kanji": "はります",
+                    "reading": "はります",
+                    "english": "put up, post, paste"
+                },
+                {
+                    "kanji": "掛けます",
+                    "reading": "かけます",
+                    "english": "hang"
+                },
+                {
+                    "kanji": "飾ります",
+                    "reading": "かざります",
+                    "english": "display, decorate"
+                }
+            ]
+        },
+        {
+            "lessonNumber": 37,
+            "title": "Passive Voice",
+            "grammar": [
+                {
+                    "rule": "受身 (Passive Form)",
+                    "explanation": "Used when an action is performed on a subject.",
+                    "examples": [
+                        {
+                            "jp": "私は部長にほめられました。",
+                            "en": "I was praised by the department manager."
+                        }
+                    ]
+                }
+            ],
+            "vocabulary": [
+                {
+                    "kanji": "踏みます",
+                    "reading": "ふみます",
+                    "english": "step on"
+                },
+                {
+                    "kanji": "壊します",
+                    "reading": "こわします",
+                    "english": "break, destroy"
+                },
+                {
+                    "kanji": "盗みます",
+                    "reading": "ぬすみます",
+                    "english": "steal"
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,163 @@
+{
+    "level": "N5",
+    "book": "Genki I: An Integrated Course in Elementary Japanese",
+    "totalLessons": 12,
+    "lessons": [
+        {
+            "lessonNumber": 1,
+            "topic": "New Friends",
+            "grammar": "X wa Y desu / Question sentences / Noun no Noun",
+            "key_vocab": [
+                "わたし",
+                "がくせい",
+                "にほん",
+                "だいがく",
+                "せんせい"
+            ]
+        },
+        {
+            "lessonNumber": 2,
+            "topic": "Shopping",
+            "grammar": "Kore/Sore/Are / Kono/Sono/Ano Noun / Koko/Soko/Asoko",
+            "key_vocab": [
+                "これ",
+                "それ",
+                "あれ",
+                "ほん",
+                "じしょ",
+                "とけい",
+                "かさ"
+            ]
+        },
+        {
+            "lessonNumber": 3,
+            "topic": "Making a Date",
+            "grammar": "Verb Conjugation (ます / ません) / Particles (に, を, で, へ)",
+            "key_vocab": [
+                "いきます",
+                "かえります",
+                "ききます",
+                "のみます",
+                "はなします",
+                "よみます"
+            ]
+        },
+        {
+            "lessonNumber": 4,
+            "topic": "The First Date",
+            "grammar": "X ga arimasu/imasu / Location words (うえ, した, なか) / Past Tense of です",
+            "key_vocab": [
+                "あります",
+                "います",
+                "みぎ",
+                "ひだり",
+                "まえ",
+                "うしろ"
+            ]
+        },
+        {
+            "lessonNumber": 5,
+            "topic": "A Trip to Okinawa",
+            "grammar": "Adjectives (い and な) / 好き・きらい / 一緒に〜ましょうか",
+            "key_vocab": [
+                "あたらしい",
+                "ふるい",
+                "あつい",
+                "さむい",
+                "いそがしい",
+                "たのしい"
+            ]
+        },
+        {
+            "lessonNumber": 6,
+            "topic": "A Day in Tokyo",
+            "grammar": "Te-form / Please do... (〜てください) / May I... (〜てもいいですか)",
+            "key_vocab": [
+                "あそぶ",
+                "いそぐ",
+                "かえす",
+                "けす",
+                "しぬ",
+                "すわる"
+            ]
+        },
+        {
+            "lessonNumber": 7,
+            "topic": "Family Picture",
+            "grammar": "Te-form for connecting sentences / 〜ている (action in progress)",
+            "key_vocab": [
+                "うたう",
+                "かぶる",
+                "はく",
+                "しる",
+                "すむ",
+                "はたらく"
+            ]
+        },
+        {
+            "lessonNumber": 8,
+            "topic": "Barbecue",
+            "grammar": "Short Forms (Present) / Informal Speech / I think that... (〜と思います)",
+            "key_vocab": [
+                "あらう",
+                "いう",
+                "いる",
+                "おそくなる",
+                "おもう",
+                "きる"
+            ]
+        },
+        {
+            "lessonNumber": 9,
+            "topic": "Kabuki",
+            "grammar": "Past Tense Short Forms / I have experienced... (〜たことがあります)",
+            "key_vocab": [
+                "おどる",
+                "おわる",
+                "くすりをのむ",
+                "にんきがある",
+                "はじまる",
+                "ひく"
+            ]
+        },
+        {
+            "lessonNumber": 10,
+            "topic": "Winter Vacation Plans",
+            "grammar": "Comparison between two items / Comparison among three or more / Adjective + Noun",
+            "key_vocab": [
+                "あき",
+                "いしゃ",
+                "えき",
+                "おかねもち",
+                "かお",
+                "きせつ"
+            ]
+        },
+        {
+            "lessonNumber": 11,
+            "topic": "After the Vacation",
+            "grammar": "〜たい (want to do...) / 〜たり〜たりする (do such things as) / 〜たことがある",
+            "key_vocab": [
+                "オーストラリア",
+                "おかし",
+                "おしょうがつ",
+                "おとこのこ",
+                "おまつり",
+                "おもちゃ"
+            ]
+        },
+        {
+            "lessonNumber": 12,
+            "topic": "Feeling Ill",
+            "grammar": "〜んです (explaining a situation) / すぎる (too much) / 〜ほうがいいです (had better)",
+            "key_vocab": [
+                "おなか",
+                "あし",
+                "のど",
+                "は",
+                "インフルエンザ",
+                "かぜ"
+            ]
+        }
+    ]
+}
