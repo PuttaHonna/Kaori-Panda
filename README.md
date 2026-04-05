@@ -61,3 +61,47 @@ Follow these instructions to get a copy of the project up and running on your lo
    ```bash
    git clone https://github.com/yourusername/kaori-panda.git
    cd kaori-panda/app
+   ```
+
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+3. **Configure Environment Variables:**
+   Create a `.env.local` file in the root of the `app` directory and add your Google Gemini API key:
+   ```env
+   VITE_GEMINI_API_KEY=your_gemini_api_key_here
+   ```
+
+4. **Start the Development Server:**
+   ```bash
+   npm run dev
+   ```
+
+5. **Open the App:**  
+   Navigate to `http://localhost:5173` in your browser to see the application.
+
+## 🧱 Project Structure
+
+* `src/components/` - Reusable UI components (buttons, dialogs, cards) built with Shadcn UI.
+* `src/pages/` - Main application pages and routes (e.g., Dojo, Unit Page, Story Mode).
+* `src/sections/` - Page sections and complex layout elements.
+* `src/hooks/` - Custom React hooks for voice synthesis, AI generation, and state management.
+* `src/data/` - Dictionary data, vocabulary lists, and lesson content.
+* `src/types/` - Core TypeScript type definitions used across the application.
+* `src/lib/` - Utility functions for Japanese parsing (wanakana/kuroshiro) and other helpers.
+
+## 🤝 Contributing
+
+Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 📝 License
+
+Distributed under the MIT License. See `LICENSE` for more information.
