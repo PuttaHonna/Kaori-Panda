@@ -11,6 +11,7 @@ import { getDateString } from '@/lib/utils';
 import { useWanakana } from '@/hooks/useWanakana';
 import type { KnowledgeSubTab, Word } from '@/types';
 import { cn } from '@/lib/utils';
+import { SenseiCheck } from '@/components/knowledge/SenseiCheck';
 import {
   Dialog,
   DialogContent,
@@ -19,19 +20,21 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 
-const subTabs: { id: KnowledgeSubTab; label: string }[] = [
+const subTabs: { id: KnowledgeSubTab | 'sensei'; label: string }[] = [
   { id: 'wordbank', label: 'Word Bank' },
   { id: 'dictionary', label: 'Dictionary' },
   { id: 'grammar', label: 'Grammar' },
   { id: 'te-form', label: 'Te-Form' },
+  { id: 'sensei', label: 'Sensei Check' },
 ];
 
 interface KnowledgeTabProps {
   onStartReview?: () => void;
+  onStartStory?: () => void;
 }
 
-export function KnowledgeTab({ onStartReview }: KnowledgeTabProps) {
-  const [activeSubTab, setActiveSubTab] = useState<KnowledgeSubTab>('wordbank');
+export function KnowledgeTab({ onStartReview, onStartStory }: KnowledgeTabProps) {
+  const [activeSubTab, setActiveSubTab] = useState<KnowledgeSubTab | 'sensei'>('wordbank');
   const [showAddModal, setShowAddModal] = useState(false);
   const [form, setForm] = useState({ japanese: '', romaji: '', english: '' });
   const [formError, setFormError] = useState('');
@@ -110,9 +113,26 @@ export function KnowledgeTab({ onStartReview }: KnowledgeTabProps) {
         {activeSubTab === 'dictionary' && <Dictionary />}
         {activeSubTab === 'grammar' && <GrammarList grammar={grammarData} />}
         {activeSubTab === 'te-form' && <TeFormChallenge />}
+        {activeSubTab === 'sensei' && <SenseiCheck />}
       </div>
 
-      {activeSubTab === 'wordbank' && <FloatingActionButton onClick={handleAddWord} />}
+      {activeSubTab === 'wordbank' && (
+        <div className="flex flex-col gap-3 fixed bottom-[88px] right-4 z-40 items-end">
+          {onStartStory && (
+            <motion.button
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={onStartStory}
+              className="px-4 py-3 bg-amber-500 text-white rounded-full shadow-lg flex items-center gap-2 font-bold"
+            >
+              📖 Story Mode
+            </motion.button>
+          )}
+          <FloatingActionButton onClick={handleAddWord} />
+        </div>
+      )}
 
       {/* Add Word Dialog */}
       <Dialog open={showAddModal} onOpenChange={setShowAddModal}>

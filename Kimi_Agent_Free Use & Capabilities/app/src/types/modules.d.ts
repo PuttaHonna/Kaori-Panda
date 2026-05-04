@@ -1,14 +1,14 @@
 declare module 'wanakana' {
-    export function bind(element: HTMLInputElement | HTMLTextAreaElement, options?: any): void;
+    export function bind(element: HTMLInputElement | HTMLTextAreaElement, options?: Record<string, unknown>): void;
     export function unbind(element: HTMLInputElement | HTMLTextAreaElement): void;
-    export function toHiragana(text: string, options?: any): string;
-    export function toKatakana(text: string, options?: any): string;
-    export function toRomaji(text: string, options?: any): string;
+    export function toHiragana(text: string, options?: Record<string, unknown>): string;
+    export function toKatakana(text: string, options?: Record<string, unknown>): string;
+    export function toRomaji(text: string, options?: Record<string, unknown>): string;
 }
 
 declare module 'kuroshiro' {
     export default class Kuroshiro {
-        init(analyzer: any): Promise<void>;
+        init(analyzer: unknown): Promise<void>;
         convert(text: string, options?: { to?: string, mode?: string, romajiSystem?: string, delimiter_start?: string, delimiter_end?: string }): Promise<string>;
     }
 }

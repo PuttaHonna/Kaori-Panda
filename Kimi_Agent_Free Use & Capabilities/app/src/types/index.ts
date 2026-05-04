@@ -102,6 +102,7 @@ export interface AppState {
     voiceGender: 'male' | 'female';
     displayMode: 'romaji' | 'furigana' | 'both';
     dailyReminders?: boolean;
+    elevenLabsVoiceId?: string;
   };
   currentN5Lesson: N5Lesson | null;
   progress: {

@@ -121,7 +121,7 @@ export function ChatPage({ onBack, lessonTitle, lessonContext }: ChatPageProps) 
   }, [dispatch, state.stats.secondsSpoken, state.goals, resetTranscript, askGemini]);
 
   useEffect(() => {
-    if (!isListening && transcript) sendUserMessage(transcript);
+    if (!isListening && transcript) setTimeout(() => sendUserMessage(transcript), 0);
   }, [isListening, transcript, sendUserMessage]);
 
   const handleKeyboardSubmit = (e: React.FormEvent) => {
