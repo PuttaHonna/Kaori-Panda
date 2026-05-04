@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { ChevronLeft, Mail, Calendar, MessageCircle, User, Languages, AlertTriangle, RotateCcw, Bell, Trash2, Target } from 'lucide-react';
+import { ChevronLeft, Mail, Calendar, MessageCircle, User, Languages, AlertTriangle, RotateCcw, Bell, Trash2, Target, Volume2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useApp } from '@/contexts/AppContext';
 import { useNotifications } from '@/hooks/useNotifications';
+import { ELEVENLABS_VOICES } from '@/lib/elevenlabs';
 import { cn } from '@/lib/utils';
 import {
   Dialog,
@@ -117,11 +118,38 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
               </div>
               <select
                 value={state.settings.voiceGender}
-                onChange={(e) => handleSettingChange('voiceGender', e.target.value)}
+                onChange={(e) => {
+                  const newGender = e.target.value;
+                  handleSettingChange('voiceGender', newGender);
+                  // Automatically switch the selected premium voice to match the new gender
+                  const firstVoice = ELEVENLABS_VOICES.find(v => v.gender === newGender);
+                  if (firstVoice) {
+                    dispatch({ type: 'UPDATE_SETTINGS', payload: { voiceGender: newGender as "male" | "female", elevenLabsVoiceId: firstVoice.id } });
+                  }
+                }}
                 className={cn('appearance-none bg-transparent text-right text-gray-600 pr-6', 'focus:outline-none cursor-pointer')}
               >
                 <option value="female">female</option>
                 <option value="male">male</option>
+              </select>
+            </div>
+
+            {/* AI Custom Voice */}
+            <div className="flex items-center justify-between py-3">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-xl bg-bamboo-100 flex items-center justify-center">
+                  <Volume2 className="w-5 h-5 text-bamboo-500" />
+                </div>
+                <span className="text-gray-900">AI Premium Voice</span>
+              </div>
+              <select
+                value={state.settings.elevenLabsVoiceId || 'wcs09USXSN5Bl7FXohVZ'}
+                onChange={(e) => handleSettingChange('elevenLabsVoiceId', e.target.value)}
+                className={cn('appearance-none bg-transparent text-right text-gray-600 pr-6 w-48 truncate', 'focus:outline-none cursor-pointer')}
+              >
+                {ELEVENLABS_VOICES.filter(v => v.gender === state.settings.voiceGender).map(voice => (
+                  <option key={voice.id} value={voice.id}>{voice.name}</option>
+                ))}
               </select>
             </div>
 
@@ -154,7 +182,7 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
               </div>
               <select
                 value={state.targetJlpt}
-                onChange={(e) => dispatch({ type: 'SET_TARGET_JLPT', payload: e.target.value as any })}
+                onChange={(e) => dispatch({ type: 'SET_TARGET_JLPT', payload: e.target.value as "N5" | "N4" | "N3" | "N2" | "N1" })}
                 className={cn('appearance-none bg-transparent text-right text-gray-600 pr-6 font-bold', 'focus:outline-none cursor-pointer')}
               >
                 <option value="N5">N5 (Beginner)</option>

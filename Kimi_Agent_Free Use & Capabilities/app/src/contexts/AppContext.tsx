@@ -59,6 +59,7 @@ const initialState: AppState = {
     difficulty: 'beginner',
     voiceGender: 'female',
     displayMode: 'romaji',
+    elevenLabsVoiceId: 'wcs09USXSN5Bl7FXohVZ',
   },
   currentN5Lesson: null,
   progress: {

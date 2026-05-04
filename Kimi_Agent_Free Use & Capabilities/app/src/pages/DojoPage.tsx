@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Swords, Trophy, RotateCcw, Zap, Flame } from 'lucide-react';
+import { ArrowLeft, Swords, Trophy, RotateCcw, Zap, Flame, Volume2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/contexts/AppContext';
 import { Local1v1Hub } from '@/components/compete/Local1v1Hub';
+import { JLPT_DATA } from '@/data/jlptVocab';
+import { getElevenLabsAudio, hasElevenLabsKey } from '@/lib/elevenlabs';
 
 interface DojoPageProps {
     onBack: () => void;
@@ -38,10 +40,11 @@ function shuffleArray<T>(array: T[]): T[] {
     return newArr;
 }
 
-// Helper to generate a round given a word bank
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function generateRound(wordsToUse: any[]) {
     const wordList = shuffleArray(wordsToUse);
     const target = wordList[0];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const distractors = wordList.slice(1, 4).map((w: any) => w.meaning || w.english);
     const options = shuffleArray([target.meaning || target.english, ...distractors]);
     return { target, options };
@@ -133,15 +136,56 @@ export function DojoPage({ onBack }: DojoPageProps) {
 
 
 // === SOLO SURVIVAL MODE ===
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function SoloSurvivalMode({ onBack, wordBank }: { onBack: () => void, wordBank: any[] }) {
+    const { state } = useApp();
     const [gameState, setGameState] = useState<'lobby' | 'playing' | 'gameover'>('lobby');
     const [score, setScore] = useState(0);
     const [timeLeft, setTimeLeft] = useState(30);
-    const [roundData, setRoundData] = useState(() => generateRound(wordBank));
     const [wrongOpt, setWrongOpt] = useState<string | null>(null);
 
     // High score persists for the session
     const [highScore, setHighScore] = useState(0);
+
+    // JLPT Selection State
+    const [selectedLevelIdx, setSelectedLevelIdx] = useState(0);
+    const [selectedChapterIdx, setSelectedChapterIdx] = useState(0);
+
+    const activeLevel = JLPT_DATA[selectedLevelIdx] || JLPT_DATA[0];
+    const activeChapter = activeLevel.chapters[selectedChapterIdx] || activeLevel.chapters[0];
+    const targetWordBank = (activeChapter && activeChapter.words.length >= 4)
+        ? activeChapter.words
+        : wordBank; // Fallback if chapter doesn't have enough words
+
+    const [roundData, setRoundData] = useState(() => generateRound(targetWordBank));
+
+    const playAudio = useCallback(async (text: string) => {
+        if (hasElevenLabsKey) {
+            try {
+                // Use the user's selected premium voice
+                const blob = await getElevenLabsAudio(text, state.settings.elevenLabsVoiceId);
+                const url = URL.createObjectURL(blob);
+                const audio = new Audio(url);
+                audio.play();
+                return;
+            } catch (error) {
+                console.error("ElevenLabs TTS failed, falling back to browser TTS", error);
+            }
+        }
+
+        if (!('speechSynthesis' in window)) return;
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'ja-JP';
+        utterance.rate = 0.9;
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utterance);
+    }, [state.settings.elevenLabsVoiceId]);
+
+    useEffect(() => {
+        if (gameState === 'playing' && roundData?.target?.word) {
+            playAudio(roundData.target.word);
+        }
+    }, [gameState, roundData?.target?.word, playAudio]);
 
     useEffect(() => {
         if (gameState === 'playing') {
@@ -149,33 +193,42 @@ function SoloSurvivalMode({ onBack, wordBank }: { onBack: () => void, wordBank: 
                 const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
                 return () => clearTimeout(timer);
             } else {
-                setGameState('gameover');
-                if (score > highScore) setHighScore(score);
+                const timer = setTimeout(() => {
+                    setGameState('gameover');
+                    if (score > highScore) setHighScore(score);
+                }, 0);
+                return () => clearTimeout(timer);
             }
         }
     }, [gameState, timeLeft, score, highScore]);
 
+    const handleLevelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        setSelectedLevelIdx(Number(e.target.value));
+        setSelectedChapterIdx(0);
+    };
+
     const handleStart = () => {
         setScore(0);
         setTimeLeft(30);
-        setRoundData(generateRound(wordBank));
+        setRoundData(generateRound(targetWordBank));
         setGameState('playing');
     };
 
     const handleAnswer = useCallback((answer: string) => {
         if (gameState !== 'playing') return;
 
+        // Use 'targetWordBank' for next round generation
         if (answer === (roundData.target.meaning || roundData.target.english)) {
             setScore(s => s + 1);
             setTimeLeft(t => t + 2);
-            setRoundData(generateRound(wordBank));
+            setRoundData(generateRound(targetWordBank));
             setWrongOpt(null);
         } else {
             setTimeLeft(t => Math.max(0, t - 3));
             setWrongOpt(answer);
             setTimeout(() => setWrongOpt(null), 500);
         }
-    }, [gameState, roundData]);
+    }, [gameState, roundData, targetWordBank]);
 
     if (gameState === 'lobby') {
         return (
@@ -187,14 +240,43 @@ function SoloSurvivalMode({ onBack, wordBank }: { onBack: () => void, wordBank: 
                     <h1 className="flex-1 text-center font-bold text-lg text-slate-800 tracking-tight">Endless Survival</h1>
                     <div className="w-9" />
                 </div>
-                <div className="flex-1 p-6 flex flex-col items-center justify-center space-y-8 max-w-sm mx-auto w-full">
-                    <div className="text-center space-y-4">
+                <div className="flex-1 p-6 flex flex-col items-center justify-center space-y-6 max-w-sm mx-auto w-full">
+                    <div className="text-center space-y-4 mb-2">
                         <div className="mx-auto w-24 h-24 flex items-center justify-center rounded-3xl bg-blue-100 text-blue-500 mb-6 border border-blue-200">
                             <Flame className="w-12 h-12" />
                         </div>
                         <h2 className="text-3xl font-black text-slate-900 tracking-tight">Beat the Clock</h2>
-                        <p className="text-slate-500 font-medium">Start with 30 seconds. Correct answers add +2s. Wrong answers deduct -3s.</p>
+                        <p className="text-slate-500 font-medium text-sm">Start with 30 seconds. Correct answers add +2s. Wrong answers deduct -3s.</p>
                     </div>
+
+                    {/* Level Selector UI */}
+                    <div className="w-full space-y-3 bg-slate-50 p-4 rounded-3xl border border-slate-200 shadow-sm">
+                        <div className="space-y-1">
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest pl-1">Vocabulary Track</label>
+                            <select 
+                                value={selectedLevelIdx}
+                                onChange={handleLevelChange}
+                                className="w-full p-3 bg-white border border-slate-200 rounded-2xl font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                                {JLPT_DATA.map((lvl, i) => (
+                                    <option key={lvl.level} value={i}>{lvl.level}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest pl-1">Syllabus / Chapter</label>
+                            <select 
+                                value={selectedChapterIdx}
+                                onChange={e => setSelectedChapterIdx(Number(e.target.value))}
+                                className="w-full p-3 bg-white border border-slate-200 rounded-2xl font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                                {activeLevel.chapters.map((ch, i) => (
+                                    <option key={i} value={i}>{ch.title} ({ch.words.length} words)</option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+
                     {highScore > 0 && (
                         <div className="bg-slate-100 px-6 py-3 rounded-full flex items-center gap-2 font-bold text-slate-700">
                             <Trophy className="w-5 h-5 text-yellow-500" /> Personal Best: {highScore}
@@ -241,15 +323,23 @@ function SoloSurvivalMode({ onBack, wordBank }: { onBack: () => void, wordBank: 
             </div>
 
             <div className="flex-1 flex flex-col justify-center px-4">
-                <div className="text-center mb-16">
+                <div className="text-center mb-12">
                     <AnimatePresence mode="popLayout">
                         <motion.div
                             key={roundData.target.word}
                             initial={{ opacity: 0, scale: 0.8 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            className="text-6xl font-black text-white mb-4 tracking-tight"
+                            className="flex items-center justify-center gap-4 mb-4"
                         >
-                            {roundData.target.word}
+                            <div className="text-6xl font-black text-white tracking-tight">
+                                {roundData.target.word}
+                            </div>
+                            <button 
+                                onClick={() => playAudio(roundData.target.word)}
+                                className="p-3 bg-slate-800 hover:bg-slate-700 rounded-full transition-colors active:scale-95 text-blue-400 shrink-0"
+                            >
+                                <Volume2 className="w-8 h-8" />
+                            </button>
                         </motion.div>
                     </AnimatePresence>
                     <div className="text-xl text-slate-500 font-medium">{roundData.target.reading}</div>

@@ -11,9 +11,10 @@ interface SpeakTabProps {
   onStartLesson: () => void;
   onStartChat: () => void;
   onStartDojo: () => void;
+  onStartPronunciation?: () => void;
 }
 
-export function SpeakTab({ onStartLesson, onStartChat, onStartDojo }: SpeakTabProps) {
+export function SpeakTab({ onStartLesson, onStartChat, onStartDojo, onStartPronunciation }: SpeakTabProps) {
   const { state } = useApp();
   const [showStats, setShowStats] = useState(false);
 
@@ -39,6 +40,13 @@ export function SpeakTab({ onStartLesson, onStartChat, onStartDojo }: SpeakTabPr
       actionText: 'Enter Dojo',
       illustration: '/illustrations/revision-mode.png',
     },
+    {
+      id: 'coach',
+      title: 'Pronunciation Coach',
+      description: 'AI listens to your pronunciation and scores you 1–10!',
+      actionText: 'Start Coach 🎤',
+      illustration: '/illustrations/lesson-mode.png', // Reusing an illustration
+    },
   ];
 
   const handleModeClick = (modeId: string) => {
@@ -51,6 +59,9 @@ export function SpeakTab({ onStartLesson, onStartChat, onStartDojo }: SpeakTabPr
         break;
       case 'dojo':
         onStartDojo();
+        break;
+      case 'coach':
+        if (onStartPronunciation) onStartPronunciation();
         break;
     }
   };

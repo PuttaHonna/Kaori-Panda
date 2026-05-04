@@ -11,8 +11,11 @@ import { SettingsPage } from '@/pages/SettingsPage';
 import { UnitPage } from '@/pages/UnitPage';
 import { ReviewPage } from '@/pages/ReviewPage';
 import { QuizPage } from '@/pages/QuizPage';
+import { AIQuizPage } from '@/pages/AIQuizPage';
 import { DojoPage } from '@/pages/DojoPage';
 import { LessonReaderPage } from '@/pages/LessonReaderPage';
+import { StoryModePage } from '@/pages/StoryModePage';
+import { PronunciationCoach } from '@/components/speak/PronunciationCoach';
 import type { TabType, Lesson, N5Lesson } from '@/types';
 import './App.css';
 
@@ -23,6 +26,9 @@ function AppContent() {
   const [showUnit, setShowUnit] = useState(false);
   const [showReview, setShowReview] = useState(false);
   const [showDojo, setShowDojo] = useState(false);
+  const [showStory, setShowStory] = useState(false);
+  const [showAIQuiz, setShowAIQuiz] = useState(false);
+  const [showCoach, setShowCoach] = useState(false);
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
   const [selectedN5Lesson, setSelectedN5Lesson] = useState<N5Lesson | null>(null);
 
@@ -69,10 +75,16 @@ function AppContent() {
             onStartLesson={handleStartLesson}
             onStartChat={handleStartChat}
             onStartDojo={() => setShowDojo(true)}
+            onStartPronunciation={() => setShowCoach(true)}
           />
         );
       case 'knowledge':
-        return <KnowledgeTab onStartReview={() => setShowReview(true)} />;
+        return (
+          <KnowledgeTab
+            onStartReview={() => setShowReview(true)}
+            onStartStory={() => setShowStory(true)}
+          />
+        );
       case 'compete':
         return <CompeteTab />;
       case 'progress':
@@ -122,7 +134,23 @@ function AppContent() {
             lesson={selectedLesson}
             onBack={() => setSelectedLesson(null)}
             onComplete={() => setSelectedLesson(null)}
+            onStartAIQuiz={() => {
+              setSelectedLesson(null);
+              setShowAIQuiz(true);
+            }}
           />
+        )}
+        {showAIQuiz && <AIQuizPage key="aiquiz" onBack={() => setShowAIQuiz(false)} />}
+        {showStory && <StoryModePage key="story" onBack={() => setShowStory(false)} />}
+        {showCoach && (
+          <div key="coach" className="fixed inset-0 z-50 bg-white">
+            <div className="flex items-center p-4 border-b">
+              <button onClick={() => setShowCoach(false)} className="p-2 -ml-2 rounded-full hover:bg-slate-100">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-600"><path d="m15 18-6-6 6-6"/></svg>
+              </button>
+            </div>
+            <PronunciationCoach />
+          </div>
         )}
       </AnimatePresence>
     </>

@@ -10,10 +10,11 @@ interface QuizPageProps {
     lesson: Lesson;
     onBack: () => void;
     onComplete: () => void;
+    onStartAIQuiz?: () => void;
 }
 
-export function QuizPage({ lesson, onBack, onComplete }: QuizPageProps) {
-    const { dispatch } = useApp();
+export function QuizPage({ lesson, onBack, onComplete, onStartAIQuiz }: QuizPageProps) {
+    const { state, dispatch } = useApp();
     const [currentIdx, setCurrentIdx] = useState(0);
     const [selectedOption, setSelectedOption] = useState<string | null>(null);
     const [inputText, setInputText] = useState('');
@@ -63,7 +64,7 @@ export function QuizPage({ lesson, onBack, onComplete }: QuizPageProps) {
 
     const handleFinish = () => {
         // Award 50 points per completed lesson, plus 10 per correct answer
-        dispatch({ type: 'UPDATE_STATS', payload: { lessonsCompleted: (useApp().state.stats.lessonsCompleted || 0) + 1 } });
+        dispatch({ type: 'UPDATE_STATS', payload: { lessonsCompleted: (state.stats.lessonsCompleted || 0) + 1 } });
         onComplete();
     };
 
@@ -82,12 +83,22 @@ export function QuizPage({ lesson, onBack, onComplete }: QuizPageProps) {
                 </div>
                 <h1 className="text-3xl font-bold text-gray-900 mb-2">Lesson Complete!</h1>
                 <p className="text-gray-500 mb-8">You scored {scoreAcc} points.</p>
-                <button
-                    onClick={handleFinish}
-                    className="w-full max-w-sm bg-bamboo-500 text-white rounded-2xl py-4 font-bold text-lg hover:bg-bamboo-600 transition-colors shadow-[0_4px_14px_0_rgba(16,185,129,0.39)]"
-                >
-                    Continue
-                </button>
+                <div className="w-full max-w-sm space-y-3">
+                    <button
+                        onClick={handleFinish}
+                        className="w-full bg-bamboo-500 text-white rounded-2xl py-4 font-bold text-lg hover:bg-bamboo-600 transition-colors shadow-[0_4px_14px_0_rgba(16,185,129,0.39)]"
+                    >
+                        Continue
+                    </button>
+                    {onStartAIQuiz && (
+                        <button
+                            onClick={onStartAIQuiz}
+                            className="w-full bg-indigo-50 text-indigo-600 border border-indigo-200 rounded-2xl py-4 font-bold text-lg hover:bg-indigo-100 transition-colors"
+                        >
+                            Generate AI Quiz ✨
+                        </button>
+                    )}
+                </div>
             </motion.div>
         );
     }

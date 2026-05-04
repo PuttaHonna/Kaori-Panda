@@ -1,0 +1,21 @@
+{
+  "level": "N5",
+  "lessons": [
+    {
+      "lessonNumber": 1,
+      "topic": "Introductions & To Be",
+      "grammar": "N1 wa N2 desu",
+      "key_vocab": [
+        "わたし", "あなた", "あのひと", "あのかた", "さん", "ちゃん", "じん", "せんせい", "きょうし", "がくせい"
+      ]
+    },
+    {
+      "lessonNumber": 2,
+      "topic": "Demonstratives",
+      "grammar": "Kore/Sore/Are/Dore",
+      "key_vocab": [
+        "これ", "それ", "あれ", "この", "その", "あの", "ほん", "じしょ", "ざっし", "しんぶん"
+      ]
+    }
+  ]
+}
