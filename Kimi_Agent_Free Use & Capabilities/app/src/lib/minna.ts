@@ -2,11 +2,19 @@ import type { Lesson, Exercise } from '@/types';
 import minnaData from '@/data/minnaN5.json';
 
 // In a real app we'd map over minnaData.lessons.
-// Since we only have a partial JSON currently, we'll cast it to any to avoid strict type errors for now.
-const data: any = minnaData;
+// Since we only have a partial JSON currently, we'll cast it to unknown to avoid strict type errors for now.
+const data: unknown = minnaData;
+
+interface MinnaDataLesson {
+    lessonNumber: number;
+    topic: string;
+    grammar: string;
+    key_vocab?: string[];
+}
 
 export function getMinnaLessons(): Lesson[] {
-    return data.lessons.map((lesson: any) => {
+    const typedData = data as { lessons: MinnaDataLesson[], level: string };
+    return typedData.lessons.map((lesson: MinnaDataLesson) => {
 
         const exercises: Exercise[] = [];
 
@@ -47,7 +55,7 @@ export function getMinnaLessons(): Lesson[] {
             unit: `Lesson ${lesson.lessonNumber}`,
             title: lesson.topic,
             description: `Grammar Point: ${lesson.grammar}`,
-            level: data.level,
+            level: typedData.level,
             exercises,
         };
     });

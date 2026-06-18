@@ -25,8 +25,10 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
     const SpeechRecognitionAPI = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     
     if (!SpeechRecognitionAPI) {
-      setSupported(false);
-      setError('Speech recognition is not supported in this browser');
+      setTimeout(() => {
+        setSupported(false);
+        setError('Speech recognition is not supported in this browser');
+      }, 0);
       return;
     }
 
@@ -80,7 +82,7 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
     if (recognitionRef.current && !isListening) {
       try {
         recognitionRef.current.start();
-      } catch (e) {
+      } catch {
         setError('Failed to start speech recognition');
       }
     }

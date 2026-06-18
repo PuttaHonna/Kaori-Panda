@@ -7,7 +7,7 @@ export function useNotifications() {
 
     useEffect(() => {
         if ('Notification' in window) {
-            setPermission(Notification.permission);
+            setTimeout(() => setPermission(Notification.permission), 0);
         }
     }, []);
 

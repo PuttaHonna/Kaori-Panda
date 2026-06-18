@@ -45,20 +45,22 @@ export function UnitPage({ onBack, onStartLesson, onStartN5Lesson }: UnitPagePro
       if (curriculum === 'genki') {
         try {
           // Map JSON to N5Lesson interface
-          const parsed: N5Lesson[] = (n5Data.lessons || []).map((l: any) => ({
-            lessonNumber: l.lessonNumber,
-            title: l.topic || `Lesson ${l.lessonNumber}`,
+          const parsed: N5Lesson[] = (n5Data.lessons || []).map((l: unknown) => {
+            const lessonObj = l as { lessonNumber: number; topic?: string; grammar: string; key_vocab?: string[] };
+            return {
+            lessonNumber: lessonObj.lessonNumber,
+            title: lessonObj.topic || `Lesson ${lessonObj.lessonNumber}`,
             grammar: [
               {
-                rule: l.grammar,
+                rule: lessonObj.grammar,
                 explanation: 'See textbook for full explanation',
                 examples: []
               }
             ],
-            vocabulary: l.key_vocab?.map((v: string) => ({
-              japanese: v, romaji: '', en: '' // Stub out vocab shape
+            vocabulary: lessonObj.key_vocab?.map((v: string) => ({
+              kanji: v, reading: '', english: '' // Stub out vocab shape
             })) || []
-          }));
+          }});
 
           if (parsed && Array.isArray(parsed)) {
             // Pattern for 12 Genki I Chapters
@@ -78,7 +80,7 @@ export function UnitPage({ onBack, onStartLesson, onStartN5Lesson }: UnitPagePro
 
             setN5Lessons(allLessons);
           }
-        } catch (err: any) {
+        } catch (err: unknown) {
           console.error("Genki syllabus error:", err);
           setError("Failed to load Genki syllabus.");
           setN5Lessons([]);
@@ -99,9 +101,9 @@ export function UnitPage({ onBack, onStartLesson, onStartN5Lesson }: UnitPagePro
           throw new Error("No chapters generated from data.");
         }
         setChapters(generated);
-      } catch (err: any) {
-        console.error("JLPT fetch error:", err);
-        setError(err.message || "Failed to load JLPT syllabus.");
+      } catch (err: unknown) {
+          console.error("JLPT fetch error:", err);
+          setError(err instanceof Error ? err.message : "Failed to load JLPT syllabus.");
         setChapters([]);
       } finally {
         setIsLoading(false);

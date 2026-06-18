@@ -1,18 +1,21 @@
 import { useState, useCallback, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { ArrowLeft, Swords, Zap, BookOpen, AlignJustify, Keyboard, RotateCcw, Trophy, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { KanjiDraw } from '@/components/compete/KanjiDraw';
+import * as wanakana from 'wanakana';
+import { JLPT_DATA } from '@/data/jlptVocab';
 
 // ─────────────────────────────────────────────
 // Shared types & helpers
 // ─────────────────────────────────────────────
 interface HubProps {
   onBack: () => void;
-  wordBank: any[];
+  wordBank: unknown[];
 }
 
-type GameId = 'wordDuel' | 'hiraganaBlitz' | 'kanjiShowdown' | 'sentenceScramble' | 'romajiTypeoff';
+type GameId = 'wordDuel' | 'hiraganaBlitz' | 'kanjiDraw' | 'sentenceScramble' | 'romajiTypeoff';
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -31,24 +34,7 @@ function makeOptions(correct: string, pool: string[]): string[] {
 // ─────────────────────────────────────────────
 // Hiragana / katakana data
 // ─────────────────────────────────────────────
-const HIRAGANA = [
-  { char: 'あ', romaji: 'a' }, { char: 'い', romaji: 'i' }, { char: 'う', romaji: 'u' },
-  { char: 'え', romaji: 'e' }, { char: 'お', romaji: 'o' }, { char: 'か', romaji: 'ka' },
-  { char: 'き', romaji: 'ki' }, { char: 'く', romaji: 'ku' }, { char: 'け', romaji: 'ke' },
-  { char: 'こ', romaji: 'ko' }, { char: 'さ', romaji: 'sa' }, { char: 'し', romaji: 'shi' },
-  { char: 'す', romaji: 'su' }, { char: 'せ', romaji: 'se' }, { char: 'そ', romaji: 'so' },
-  { char: 'た', romaji: 'ta' }, { char: 'ち', romaji: 'chi' }, { char: 'つ', romaji: 'tsu' },
-  { char: 'て', romaji: 'te' }, { char: 'と', romaji: 'to' }, { char: 'な', romaji: 'na' },
-  { char: 'に', romaji: 'ni' }, { char: 'ぬ', romaji: 'nu' }, { char: 'ね', romaji: 'ne' },
-  { char: 'の', romaji: 'no' }, { char: 'は', romaji: 'ha' }, { char: 'ひ', romaji: 'hi' },
-  { char: 'ふ', romaji: 'fu' }, { char: 'へ', romaji: 'he' }, { char: 'ほ', romaji: 'ho' },
-  { char: 'ま', romaji: 'ma' }, { char: 'み', romaji: 'mi' }, { char: 'む', romaji: 'mu' },
-  { char: 'め', romaji: 'me' }, { char: 'も', romaji: 'mo' }, { char: 'や', romaji: 'ya' },
-  { char: 'ゆ', romaji: 'yu' }, { char: 'よ', romaji: 'yo' }, { char: 'ら', romaji: 'ra' },
-  { char: 'り', romaji: 'ri' }, { char: 'る', romaji: 'ru' }, { char: 'れ', romaji: 're' },
-  { char: 'ろ', romaji: 'ro' }, { char: 'わ', romaji: 'wa' }, { char: 'を', romaji: 'wo' },
-  { char: 'ん', romaji: 'n' },
-];
+// HIRAGANA constant removed since we use dynamic word banks
 
 // ─────────────────────────────────────────────
 // Shared split-screen shell
@@ -110,25 +96,72 @@ interface SetupProps {
   accentColor: string;
   icon: React.ReactNode;
   onBack: () => void;
-  onStart: (p1: string, p2: string) => void;
+  onStart: (p1: string, p2: string, targetWordBank: unknown[]) => void;
+  hideDataset?: boolean;
+  defaultWordBank?: unknown[];
 }
-function SetupScreen({ title, description, accentColor, icon, onBack, onStart }: SetupProps) {
+function SetupScreen({ title, description, accentColor, icon, onBack, onStart, hideDataset, defaultWordBank = [] }: SetupProps) {
   const [p1, setP1] = useState('Player 1');
   const [p2, setP2] = useState('Player 2');
+
+  const [selectedLevelIdx, setSelectedLevelIdx] = useState(0);
+  const [selectedChapterIdx, setSelectedChapterIdx] = useState(0);
+
+  const activeLevel = JLPT_DATA[selectedLevelIdx] || JLPT_DATA[0];
+  const activeChapter = activeLevel.chapters[selectedChapterIdx] || activeLevel.chapters[0];
+  const targetWordBank = (activeChapter && activeChapter.words.length >= 4)
+      ? activeChapter.words
+      : defaultWordBank;
+
+  const handleLevelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+      setSelectedLevelIdx(Number(e.target.value));
+      setSelectedChapterIdx(0);
+  };
+
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-50 bg-slate-50 flex flex-col">
-      <div className="flex items-center p-4 bg-white border-b">
+      <div className="flex items-center p-4 bg-white border-b sticky top-0 z-10">
         <button onClick={onBack} className="p-2 -ml-2 rounded-full hover:bg-slate-100"><ArrowLeft className="w-5 h-5 text-slate-600" /></button>
         <h1 className="flex-1 text-center font-bold text-lg text-slate-800">{title}</h1>
         <div className="w-9" />
       </div>
-      <div className="flex-1 flex flex-col items-center justify-center p-6 space-y-6 max-w-sm mx-auto w-full">
-        <div className={`w-20 h-20 rounded-3xl flex items-center justify-center ${accentColor} mb-2`}>{icon}</div>
+      <div className="flex-1 overflow-y-auto p-6 flex flex-col items-center justify-start space-y-6 max-w-sm mx-auto w-full pb-20">
+        <div className={`w-20 h-20 shrink-0 rounded-3xl flex items-center justify-center ${accentColor} mb-2`}>{icon}</div>
         <div className="text-center">
           <h2 className="text-2xl font-black text-slate-900 mb-1">{title}</h2>
           <p className="text-slate-500 text-sm">{description}</p>
         </div>
-        <div className="w-full space-y-4">
+        
+        {!hideDataset && (
+            <div className="w-full space-y-3 bg-white p-4 rounded-3xl border border-slate-200 shadow-sm shrink-0">
+                <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-widest pl-1">Vocabulary Track</label>
+                    <select 
+                        value={selectedLevelIdx}
+                        onChange={handleLevelChange}
+                        className="w-full h-11 bg-slate-50 border border-slate-200 rounded-xl px-3 font-medium text-slate-700 outline-none focus:border-blue-500"
+                    >
+                        {JLPT_DATA.map((lvl, idx) => (
+                            <option key={lvl.level} value={idx}>{lvl.level.replace(/_/g, ' ')}</option>
+                        ))}
+                    </select>
+                </div>
+                <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-widest pl-1">Chapter</label>
+                    <select 
+                        value={selectedChapterIdx}
+                        onChange={(e) => setSelectedChapterIdx(Number(e.target.value))}
+                        className="w-full h-11 bg-slate-50 border border-slate-200 rounded-xl px-3 font-medium text-slate-700 outline-none focus:border-blue-500"
+                    >
+                        {activeLevel.chapters.map((chap, idx) => (
+                            <option key={chap.title} value={idx}>{chap.title}</option>
+                        ))}
+                    </select>
+                </div>
+            </div>
+        )}
+
+        <div className="w-full space-y-4 shrink-0">
           <div className="bg-white rounded-2xl border shadow-sm p-4 space-y-2">
             <label className="text-xs font-bold text-blue-500 uppercase tracking-widest">Player 1 (Bottom)</label>
             <Input value={p1} onChange={e => setP1(e.target.value)} className="h-11 bg-slate-50 border-none font-medium" />
@@ -138,7 +171,7 @@ function SetupScreen({ title, description, accentColor, icon, onBack, onStart }:
             <Input value={p2} onChange={e => setP2(e.target.value)} className="h-11 bg-slate-50 border-none font-medium" />
           </div>
         </div>
-        <Button onClick={() => onStart(p1, p2)} className={`w-full h-14 text-lg rounded-2xl font-bold`}>
+        <Button onClick={() => onStart(p1, p2, targetWordBank)} className={`w-full h-14 shrink-0 mt-4 text-lg rounded-2xl font-bold`}>
           Start Game
         </Button>
       </div>
@@ -149,7 +182,7 @@ function SetupScreen({ title, description, accentColor, icon, onBack, onStart }:
 // ─────────────────────────────────────────────
 // Game Over screen
 // ─────────────────────────────────────────────
-function GameOverScreen({ score1, score2, p1Name, p2Name, onReplay, onExit }: any) {
+function GameOverScreen({ score1, score2, p1Name, p2Name, onReplay, onExit }: { score1: number, score2: number, p1Name: string, p2Name: string, onReplay: () => void, onExit: () => void }) {
   const tie = score1 === score2;
   const winner = score1 > score2 ? p1Name : p2Name;
   const winColor = score1 > score2 ? 'text-blue-400' : 'text-red-400';
@@ -184,7 +217,7 @@ function GameOverScreen({ score1, score2, p1Name, p2Name, onReplay, onExit }: an
 // ─────────────────────────────────────────────
 // GAME 1: Word Translation Duel
 // ─────────────────────────────────────────────
-function WordDuel({ onBack, wordBank }: HubProps) {
+function WordDuel({ onBack, wordBank: defaultWordBank }: HubProps) {
   const [phase, setPhase] = useState<'setup' | 'playing' | 'over'>('setup');
   const [p1Name, setP1Name] = useState('Player 1');
   const [p2Name, setP2Name] = useState('Player 2');
@@ -193,52 +226,52 @@ function WordDuel({ onBack, wordBank }: HubProps) {
   const [timeLeft, setTimeLeft] = useState(60);
   const [p1Flash, setP1Flash] = useState<'correct' | 'wrong' | null>(null);
   const [p2Flash, setP2Flash] = useState<'correct' | 'wrong' | null>(null);
+  const [bank, setBank] = useState(() => defaultWordBank);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [round, setRound] = useState<any>(null);
 
-  const meanings = wordBank.map(w => w.meaning || w.english).filter(Boolean);
-  const [round, setRound] = useState(() => {
-    const words = shuffle(wordBank);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const nextRound = useCallback((currentBank: any[]) => {
+    const words = shuffle(currentBank);
     const correct = words[0].meaning || words[0].english;
-    return { target: words[0], options: makeOptions(correct, meanings) };
-  });
-
-  const nextRound = useCallback(() => {
-    const words = shuffle(wordBank);
-    const correct = words[0].meaning || words[0].english;
+    const meanings = currentBank.map(w => w.meaning || w.english).filter(Boolean);
     setRound({ target: words[0], options: makeOptions(correct, meanings) });
-  }, [wordBank, meanings]);
+  }, []);
 
   useEffect(() => {
     if (phase !== 'playing') return;
-    if (timeLeft <= 0) { setPhase('over'); return; }
+    if (timeLeft <= 0) { setTimeout(() => setPhase('over'), 0); return; }
     const t = setTimeout(() => setTimeLeft(x => x - 1), 1000);
     return () => clearTimeout(t);
   }, [phase, timeLeft]);
 
   const answer = useCallback((player: 1 | 2, opt: string) => {
-    if (phase !== 'playing') return;
+    if (phase !== 'playing' || !round) return;
     const correct = round.target.meaning || round.target.english;
     if (opt === correct) {
       if (player === 1) { setScore1(s => s + 1); setP1Flash('correct'); }
       else { setScore2(s => s + 1); setP2Flash('correct'); }
       setTimeout(() => { setP1Flash(null); setP2Flash(null); }, 300);
-      nextRound();
+      nextRound(bank);
     } else {
       if (player === 1) { setP1Flash('wrong'); setTimeout(() => setP1Flash(null), 500); }
       else { setP2Flash('wrong'); setTimeout(() => setP2Flash(null), 500); }
     }
-  }, [phase, round, nextRound]);
+  }, [phase, round, bank, nextRound]);
 
-  const start = (p1: string, p2: string) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const start = (p1: string, p2: string, selectedBank: any[]) => {
     setP1Name(p1); setP2Name(p2);
+    setBank(selectedBank);
     setScore1(0); setScore2(0); setTimeLeft(60);
-    nextRound(); setPhase('playing');
+    nextRound(selectedBank); setPhase('playing');
   };
 
   if (phase === 'setup') return (
-    <SetupScreen title="Word Translation Duel" description="See a Japanese word. First player to tap the correct English meaning scores!" accentColor="bg-purple-100 text-purple-500" icon={<BookOpen className="w-10 h-10" />} onBack={onBack} onStart={start} />
+    <SetupScreen title="Word Translation Duel" description="See a Japanese word. First player to tap the correct English meaning scores!" accentColor="bg-purple-100 text-purple-500" icon={<BookOpen className="w-10 h-10" />} onBack={onBack} onStart={start} defaultWordBank={defaultWordBank} />
   );
   if (phase === 'over') return (
-    <GameOverScreen score1={score1} score2={score2} p1Name={p1Name} p2Name={p2Name} onReplay={() => start(p1Name, p2Name)} onExit={onBack} />
+    <GameOverScreen score1={score1} score2={score2} p1Name={p1Name} p2Name={p2Name} onReplay={() => start(p1Name, p2Name, bank)} onExit={onBack} />
   );
 
   const btnClass = (flash: 'correct' | 'wrong' | null) =>
@@ -248,13 +281,13 @@ function WordDuel({ onBack, wordBank }: HubProps) {
     <SplitShell onBack={onBack} p1Name={p1Name} p2Name={p2Name} score1={score1} score2={score2} timeLeft={timeLeft}>
       {/* P2 grid */}
       <div className="space-y-3">
-        <div className="text-center mb-4 text-5xl font-black text-white">{round.target.word}</div>
-        <div className="grid grid-cols-2 gap-3">{round.options.map((o, i) => <Button key={i} onClick={() => answer(2, o)} className={btnClass(p2Flash)}>{o}</Button>)}</div>
+        <div className="text-center mb-4 text-5xl font-black text-white">{round?.target.word}</div>
+        <div className="grid grid-cols-2 gap-3">{round?.options.map((o: string, i: number) => <Button key={i} onClick={() => answer(2, o)} className={btnClass(p2Flash)}>{o}</Button>)}</div>
       </div>
       {/* P1 grid */}
       <div className="space-y-3">
-        <div className="text-center mb-4 text-5xl font-black text-white">{round.target.word}</div>
-        <div className="grid grid-cols-2 gap-3">{round.options.map((o, i) => <Button key={i} onClick={() => answer(1, o)} className={btnClass(p1Flash)}>{o}</Button>)}</div>
+        <div className="text-center mb-4 text-5xl font-black text-white">{round?.target.word}</div>
+        <div className="grid grid-cols-2 gap-3">{round?.options.map((o: string, i: number) => <Button key={i} onClick={() => answer(1, o)} className={btnClass(p1Flash)}>{o}</Button>)}</div>
       </div>
     </SplitShell>
   );
@@ -263,56 +296,63 @@ function WordDuel({ onBack, wordBank }: HubProps) {
 // ─────────────────────────────────────────────
 // GAME 2: Hiragana Blitz
 // ─────────────────────────────────────────────
-function HiraganaBlitz({ onBack }: HubProps) {
+function HiraganaBlitz({ onBack, wordBank: defaultWordBank }: HubProps) {
   const [phase, setPhase] = useState<'setup' | 'playing' | 'over'>('setup');
   const [p1Name, setP1Name] = useState('Player 1');
   const [p2Name, setP2Name] = useState('Player 2');
   const [score1, setScore1] = useState(0);
   const [score2, setScore2] = useState(0);
   const [timeLeft, setTimeLeft] = useState(60);
-  const romajiPool = HIRAGANA.map(h => h.romaji);
-  const [round, setRound] = useState(() => {
-    const h = shuffle(HIRAGANA)[0];
-    return { target: h, options: makeOptions(h.romaji, romajiPool) };
-  });
+  
+  const [bank, setBank] = useState(() => defaultWordBank);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [round, setRound] = useState<any>(null);
+  
   const [p1Flash, setP1Flash] = useState<'correct' | 'wrong' | null>(null);
   const [p2Flash, setP2Flash] = useState<'correct' | 'wrong' | null>(null);
 
-  const nextRound = useCallback(() => {
-    const h = shuffle(HIRAGANA)[0];
-    setRound({ target: h, options: makeOptions(h.romaji, romajiPool) });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const nextRound = useCallback((currentBank: any[]) => {
+    const words = shuffle(currentBank);
+    const t = words[0];
+    const correctRomaji = wanakana.toRomaji(t.reading).toLowerCase();
+    const allReadings = Array.from(new Set(currentBank.map(w => wanakana.toRomaji(w.reading).toLowerCase())));
+    setRound({ target: t, correct: correctRomaji, options: makeOptions(correctRomaji, allReadings) });
   }, []);
 
   useEffect(() => {
     if (phase !== 'playing') return;
-    if (timeLeft <= 0) { setPhase('over'); return; }
+    if (timeLeft <= 0) { setTimeout(() => setPhase('over'), 0); return; }
     const t = setTimeout(() => setTimeLeft(x => x - 1), 1000);
     return () => clearTimeout(t);
   }, [phase, timeLeft]);
 
   const answer = useCallback((player: 1 | 2, opt: string) => {
-    if (phase !== 'playing') return;
-    if (opt === round.target.romaji) {
+    if (phase !== 'playing' || !round) return;
+    if (opt === round.correct) {
       if (player === 1) { setScore1(s => s + 1); setP1Flash('correct'); }
       else { setScore2(s => s + 1); setP2Flash('correct'); }
       setTimeout(() => { setP1Flash(null); setP2Flash(null); }, 300);
-      nextRound();
+      nextRound(bank);
     } else {
       if (player === 1) { setP1Flash('wrong'); setTimeout(() => setP1Flash(null), 500); }
       else { setP2Flash('wrong'); setTimeout(() => setP2Flash(null), 500); }
     }
-  }, [phase, round, nextRound]);
+  }, [phase, round, bank, nextRound]);
 
-  const start = (p1: string, p2: string) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const start = (p1: string, p2: string, selectedBank: any[]) => {
     setP1Name(p1); setP2Name(p2);
-    setScore1(0); setScore2(0); setTimeLeft(60); nextRound(); setPhase('playing');
+    setBank(selectedBank);
+    setScore1(0); setScore2(0); setTimeLeft(60); 
+    nextRound(selectedBank); setPhase('playing');
   };
 
   if (phase === 'setup') return (
-    <SetupScreen title="Hiragana Blitz" description="A hiragana character appears. Fastest to tap the correct romaji wins the point!" accentColor="bg-pink-100 text-pink-500" icon={<Zap className="w-10 h-10" />} onBack={onBack} onStart={start} />
+    <SetupScreen title="Hiragana Blitz" description="Read the vocabulary word. Fastest to tap the correct romaji spelling wins the point!" accentColor="bg-pink-100 text-pink-500" icon={<Zap className="w-10 h-10" />} onBack={onBack} onStart={start} defaultWordBank={defaultWordBank} />
   );
   if (phase === 'over') return (
-    <GameOverScreen score1={score1} score2={score2} p1Name={p1Name} p2Name={p2Name} onReplay={() => start(p1Name, p2Name)} onExit={onBack} />
+    <GameOverScreen score1={score1} score2={score2} p1Name={p1Name} p2Name={p2Name} onReplay={() => start(p1Name, p2Name, bank)} onExit={onBack} />
   );
 
   const btnClass = (flash: 'correct' | 'wrong' | null) =>
@@ -321,12 +361,12 @@ function HiraganaBlitz({ onBack }: HubProps) {
   return (
     <SplitShell onBack={onBack} p1Name={p1Name} p2Name={p2Name} score1={score1} score2={score2} timeLeft={timeLeft}>
       <div className="space-y-3">
-        <div className="text-center text-8xl font-black text-white mb-4">{round.target.char}</div>
-        <div className="grid grid-cols-2 gap-3">{round.options.map((o, i) => <Button key={i} onClick={() => answer(2, o)} className={btnClass(p2Flash)}>{o}</Button>)}</div>
+        <div className="text-center text-7xl font-black text-white mb-4">{round?.target.word}</div>
+        <div className="grid grid-cols-2 gap-3">{round?.options.map((o: string, i: number) => <Button key={i} onClick={() => answer(2, o)} className={btnClass(p2Flash)}>{o}</Button>)}</div>
       </div>
       <div className="space-y-3">
-        <div className="text-center text-8xl font-black text-white mb-4">{round.target.char}</div>
-        <div className="grid grid-cols-2 gap-3">{round.options.map((o, i) => <Button key={i} onClick={() => answer(1, o)} className={btnClass(p1Flash)}>{o}</Button>)}</div>
+        <div className="text-center text-7xl font-black text-white mb-4">{round?.target.word}</div>
+        <div className="grid grid-cols-2 gap-3">{round?.options.map((o: string, i: number) => <Button key={i} onClick={() => answer(1, o)} className={btnClass(p1Flash)}>{o}</Button>)}</div>
       </div>
     </SplitShell>
   );
@@ -335,52 +375,67 @@ function HiraganaBlitz({ onBack }: HubProps) {
 // ─────────────────────────────────────────────
 // GAME 3: Romaji Typeoff (type the romaji first)
 // ─────────────────────────────────────────────
-function RomajiTypeoff({ onBack }: HubProps) {
+function RomajiTypeoff({ onBack, wordBank: defaultWordBank }: HubProps) {
   const [phase, setPhase] = useState<'setup' | 'playing' | 'over'>('setup');
   const [p1Name, setP1Name] = useState('Player 1');
   const [p2Name, setP2Name] = useState('Player 2');
   const [score1, setScore1] = useState(0);
   const [score2, setScore2] = useState(0);
   const [timeLeft, setTimeLeft] = useState(60);
-  const [round, setRound] = useState(() => shuffle(HIRAGANA)[0]);
+
+  const [bank, setBank] = useState(() => defaultWordBank);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [round, setRound] = useState<any>(null);
+
   const [p1Input, setP1Input] = useState('');
   const [p2Input, setP2Input] = useState('');
   const [flash, setFlash] = useState<{ p: 1 | 2, type: 'correct' | 'wrong' } | null>(null);
 
-  const nextRound = () => { setRound(shuffle(HIRAGANA)[0]); setP1Input(''); setP2Input(''); };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const nextRound = useCallback((currentBank: any[]) => {
+    const t = shuffle(currentBank)[0];
+    const correctRomaji = wanakana.toRomaji(t.reading).toLowerCase();
+    setRound({ target: t, correct: correctRomaji });
+    setP1Input(''); setP2Input('');
+  }, []);
 
   useEffect(() => {
     if (phase !== 'playing') return;
-    if (timeLeft <= 0) { setPhase('over'); return; }
+    if (timeLeft <= 0) { setTimeout(() => setPhase('over'), 0); return; }
     const t = setTimeout(() => setTimeLeft(x => x - 1), 1000);
     return () => clearTimeout(t);
   }, [phase, timeLeft]);
 
   const trySubmit = (player: 1 | 2, val: string) => {
-    if (val.toLowerCase().trim() === round.romaji) {
+    if (!round) return;
+    const normalizedVal = val.toLowerCase().trim().replace(/n'/g, 'n');
+    const normalizedCorrect = round.correct.replace(/n'/g, 'n');
+    if (normalizedVal === normalizedCorrect) {
       if (player === 1) setScore1(s => s + 1); else setScore2(s => s + 1);
       setFlash({ p: player, type: 'correct' });
-      setTimeout(() => { setFlash(null); nextRound(); }, 400);
+      setTimeout(() => { setFlash(null); nextRound(bank); }, 400);
     }
   };
 
-  const start = (p1: string, p2: string) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const start = (p1: string, p2: string, selectedBank: any[]) => {
     setP1Name(p1); setP2Name(p2); setScore1(0); setScore2(0);
-    setTimeLeft(60); nextRound(); setPhase('playing');
+    setBank(selectedBank);
+    setTimeLeft(60); nextRound(selectedBank); setPhase('playing');
   };
 
   if (phase === 'setup') return (
-    <SetupScreen title="Romaji Typeoff" description="See the hiragana — type its romaji first to score! No multiple choice — pure typing speed." accentColor="bg-amber-100 text-amber-600" icon={<Keyboard className="w-10 h-10" />} onBack={onBack} onStart={start} />
+    <SetupScreen title="Romaji Typeoff" description="Type the romaji reading of the Japanese vocabulary word before your opponent does." accentColor="bg-amber-100 text-amber-600" icon={<Keyboard className="w-10 h-10" />} onBack={onBack} onStart={start} defaultWordBank={defaultWordBank} />
   );
   if (phase === 'over') return (
-    <GameOverScreen score1={score1} score2={score2} p1Name={p1Name} p2Name={p2Name} onReplay={() => start(p1Name, p2Name)} onExit={onBack} />
+    <GameOverScreen score1={score1} score2={score2} p1Name={p1Name} p2Name={p2Name} onReplay={() => start(p1Name, p2Name, bank)} onExit={onBack} />
   );
 
   return (
     <SplitShell onBack={onBack} p1Name={p1Name} p2Name={p2Name} score1={score1} score2={score2} timeLeft={timeLeft}>
       {/* P2 */}
       <div className="space-y-3">
-        <div className={`text-center text-8xl font-black mb-4 transition-colors ${flash?.p === 2 && flash.type === 'correct' ? 'text-green-400' : 'text-white'}`}>{round.char}</div>
+        <div className={`text-center text-7xl font-black mb-4 transition-colors ${flash?.p === 2 && flash.type === 'correct' ? 'text-green-400' : 'text-white'}`}>{round?.target.word}</div>
         <Input
           value={p2Input}
           onChange={e => { setP2Input(e.target.value); trySubmit(2, e.target.value); }}
@@ -391,7 +446,7 @@ function RomajiTypeoff({ onBack }: HubProps) {
       </div>
       {/* P1 */}
       <div className="space-y-3">
-        <div className={`text-center text-8xl font-black mb-4 transition-colors ${flash?.p === 1 && flash.type === 'correct' ? 'text-green-400' : 'text-white'}`}>{round.char}</div>
+        <div className={`text-center text-7xl font-black mb-4 transition-colors ${flash?.p === 1 && flash.type === 'correct' ? 'text-green-400' : 'text-white'}`}>{round?.target.word}</div>
         <Input
           value={p1Input}
           onChange={e => { setP1Input(e.target.value); trySubmit(1, e.target.value); }}
@@ -441,7 +496,7 @@ function SentenceScramble({ onBack }: HubProps) {
 
   useEffect(() => {
     if (phase !== 'playing') return;
-    if (timeLeft <= 0) { setPhase('over'); return; }
+    if (timeLeft <= 0) { setTimeout(() => setPhase('over'), 0); return; }
     const t = setTimeout(() => setTimeLeft(x => x - 1), 1000);
     return () => clearTimeout(t);
   }, [phase, timeLeft]);
@@ -482,7 +537,7 @@ function SentenceScramble({ onBack }: HubProps) {
   };
 
   if (phase === 'setup') return (
-    <SetupScreen title="Sentence Scramble" description="Tap the words in the correct order to form a Japanese sentence. First to finish scores!" accentColor="bg-teal-100 text-teal-600" icon={<AlignJustify className="w-10 h-10" />} onBack={onBack} onStart={start} />
+    <SetupScreen title="Sentence Scramble" description="Tap the words in the correct order to form a Japanese sentence. First to finish scores!" accentColor="bg-teal-100 text-teal-600" icon={<AlignJustify className="w-10 h-10" />} onBack={onBack} onStart={start} hideDataset={true} />
   );
   if (phase === 'over') return (
     <GameOverScreen score1={score1} score2={score2} p1Name={p1Name} p2Name={p2Name} onReplay={() => start(p1Name, p2Name)} onExit={onBack} />
@@ -527,6 +582,7 @@ const GAMES: { id: GameId; title: string; desc: string; icon: React.ReactNode; c
   { id: 'hiraganaBlitz', title: 'Hiragana Blitz', desc: 'Identify the hiragana character fastest', icon: <Zap className="w-7 h-7" />, color: 'text-pink-500', bg: 'bg-pink-50 group-hover:bg-pink-500 group-hover:text-white' },
   { id: 'romajiTypeoff', title: 'Romaji Typeoff', desc: 'Type the romaji before your opponent does', icon: <Keyboard className="w-7 h-7" />, color: 'text-amber-600', bg: 'bg-amber-50 group-hover:bg-amber-500 group-hover:text-white' },
   { id: 'sentenceScramble', title: 'Sentence Scramble', desc: 'Arrange words into the correct sentence first', icon: <AlignJustify className="w-7 h-7" />, color: 'text-teal-600', bg: 'bg-teal-50 group-hover:bg-teal-500 group-hover:text-white' },
+  { id: 'kanjiDraw', title: 'Kanji Draw', desc: 'Take turns drawing kanji characters', icon: <BookOpen className="w-7 h-7" />, color: 'text-violet-500', bg: 'bg-violet-50 group-hover:bg-violet-500 group-hover:text-white' },
 ];
 
 export function Local1v1Hub({ onBack, wordBank }: HubProps) {
@@ -536,6 +592,7 @@ export function Local1v1Hub({ onBack, wordBank }: HubProps) {
   if (selected === 'hiraganaBlitz') return <HiraganaBlitz onBack={() => setSelected(null)} wordBank={wordBank} />;
   if (selected === 'romajiTypeoff') return <RomajiTypeoff onBack={() => setSelected(null)} wordBank={wordBank} />;
   if (selected === 'sentenceScramble') return <SentenceScramble onBack={() => setSelected(null)} wordBank={wordBank} />;
+  if (selected === 'kanjiDraw') return <KanjiDraw onBack={() => setSelected(null)} wordBank={wordBank} />;
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="fixed inset-0 z-50 flex flex-col bg-slate-50">

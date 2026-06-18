@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { GoogleGenerativeAI, type ChatSession } from '@google/generative-ai';
 import { useApp } from '@/contexts/AppContext';
 import { genkiFallbacks } from '@/data/genkiFallbacks';
@@ -72,7 +72,7 @@ export function useGeminiChat(options?: UseGeminiChatOptions): UseGeminiChatRetu
     const hasApiKey = Boolean(API_KEY && API_KEY !== 'your_gemini_api_key_here');
 
     // Lazy-init Gemini chat session
-    const getChat = useCallback((): ChatSession | null => {
+    const getChat = (): ChatSession | null => {
         if (!hasApiKey) return null;
         if (!chatRef.current) {
             try {
@@ -88,9 +88,9 @@ export function useGeminiChat(options?: UseGeminiChatOptions): UseGeminiChatRetu
             }
         }
         return chatRef.current;
-    }, [hasApiKey, state.settings.difficulty, state.user.name, state.progress.completedLessons]);
+    };
 
-    const sendMessage = useCallback(async (userText: string): Promise<Message | null> => {
+    const sendMessage = async (userText: string): Promise<Message | null> => {
         setIsThinking(true);
         setError(null);
 
@@ -143,7 +143,7 @@ export function useGeminiChat(options?: UseGeminiChatOptions): UseGeminiChatRetu
             setIsThinking(false);
             return { ...fb, id: Date.now().toString(), timestamp: new Date() };
         }
-    }, [getChat]);
+    };
 
     return { sendMessage, isThinking, error, clearError: () => setError(null), hasApiKey };
 }
